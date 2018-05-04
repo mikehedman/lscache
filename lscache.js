@@ -34,7 +34,7 @@
   // Prefix for all lscache keys
   var CACHE_PREFIX = 'lscache-';
 
-  // Suffix for the key name on the expiration items in localStorage
+  // Suffix for the key name on the expiration items in sessionStorage
   var CACHE_SUFFIX = '-cacheexpiration';
 
   // expiration date radix (set to Base-36 for most space savings)
@@ -50,7 +50,7 @@
   var cacheBucket = '';
   var warnings = false;
 
-  // Determines if localStorage is supported in the browser;
+  // Determines if sessionStorage is supported in the browser;
   // result is cached for better performance instead of being run each time.
   // Feature detection is based on how Modernizr does it;
   // it's not straightforward due to FF4 issues.
@@ -66,7 +66,7 @@
     // some browsers will throw an error if you try to access local storage (e.g. brave browser)
     // hence check is inside a try/catch
     try {
-      if (!localStorage) {
+      if (!sessionStorage) {
         return false;
       }
     } catch (ex) {
@@ -78,8 +78,8 @@
       removeItem(key);
       cachedStorage = true;
     } catch (e) {
-        // If we hit the limit, and we don't have an empty localStorage then it means we have support
-        if (isOutOfSpace(e) && localStorage.length) {
+        // If we hit the limit, and we don't have an empty sessionStorage then it means we have support
+        if (isOutOfSpace(e) && sessionStorage.length) {
             cachedStorage = true; // just maxed it out and even the set test failed.
         } else {
             cachedStorage = false;
@@ -116,7 +116,7 @@
   }
 
   /**
-   * Returns the full string for the localStorage expiration item.
+   * Returns the full string for the sessionStorage expiration item.
    * @param {String} key
    * @return {string}
    */
@@ -133,28 +133,28 @@
   }
 
   /**
-   * Wrapper functions for localStorage methods
+   * Wrapper functions for sessionStorage methods
    */
 
   function getItem(key) {
-    return localStorage.getItem(CACHE_PREFIX + cacheBucket + key);
+    return sessionStorage.getItem(CACHE_PREFIX + cacheBucket + key);
   }
 
   function setItem(key, value) {
     // Fix for iPad issue - sometimes throws QUOTA_EXCEEDED_ERR on setItem.
-    localStorage.removeItem(CACHE_PREFIX + cacheBucket + key);
-    localStorage.setItem(CACHE_PREFIX + cacheBucket + key, value);
+    sessionStorage.removeItem(CACHE_PREFIX + cacheBucket + key);
+    sessionStorage.setItem(CACHE_PREFIX + cacheBucket + key, value);
   }
 
   function removeItem(key) {
-    localStorage.removeItem(CACHE_PREFIX + cacheBucket + key);
+    sessionStorage.removeItem(CACHE_PREFIX + cacheBucket + key);
   }
 
   function eachKey(fn) {
     var prefixRegExp = new RegExp('^' + CACHE_PREFIX + escapeRegExpSpecialCharacters(cacheBucket) + '(.*)');
     // Loop in reverse as removing items will change indices of tail
-    for (var i = localStorage.length-1; i >= 0 ; --i) {
-      var key = localStorage.key(i);
+    for (var i = sessionStorage.length-1; i >= 0 ; --i) {
+      var key = sessionStorage.key(i);
       key = key && key.match(prefixRegExp);
       key = key && key[1];
       if (key && key.indexOf(CACHE_SUFFIX) < 0) {
@@ -199,7 +199,7 @@
 
   var lscache = {
     /**
-     * Stores the value in localStorage. Expires after specified number of minutes.
+     * Stores the value in sessionStorage. Expires after specified number of minutes.
      * @param {string} key
      * @param {Object|string} value
      * @param {number} time
@@ -208,7 +208,7 @@
       if (!supportsStorage()) return;
 
       // If we don't get a string value, try to stringify
-      // In future, localStorage may properly support storing non-strings
+      // In future, sessionStorage may properly support storing non-strings
       // and this can be removed.
 
       if (!supportsJSON()) return;
@@ -266,17 +266,17 @@
         }
       }
 
-      // If a time is specified, store expiration info in localStorage
+      // If a time is specified, store expiration info in sessionStorage
       if (time) {
         setItem(expirationKey(key), (currentTime() + time).toString(EXPIRY_RADIX));
       } else {
-        // In case they previously set a time, remove that info from localStorage.
+        // In case they previously set a time, remove that info from sessionStorage.
         removeItem(expirationKey(key));
       }
     },
 
     /**
-     * Retrieves specified value from localStorage, if not expired.
+     * Retrieves specified value from sessionStorage, if not expired.
      * @param {string} key
      * @return {string|Object}
      */
@@ -302,7 +302,7 @@
     },
 
     /**
-     * Removes a value from localStorage.
+     * Removes a value from sessionStorage.
      * Equivalent to 'delete' in memcache, but that's a keyword in JS.
      * @param {string} key
      */
@@ -322,7 +322,7 @@
     },
 
     /**
-     * Flushes all lscache items and expiry markers without affecting rest of localStorage
+     * Flushes all lscache items and expiry markers without affecting rest of sessionStorage
      */
     flush: function() {
       if (!supportsStorage()) return;
@@ -333,7 +333,7 @@
     },
 
     /**
-     * Flushes expired lscache items and expiry markers without affecting rest of localStorage
+     * Flushes expired lscache items and expiry markers without affecting rest of sessionStorage
      */
     flushExpired: function() {
       if (!supportsStorage()) return;
